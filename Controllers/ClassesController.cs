@@ -31,7 +31,8 @@ public class ClassesController : ControllerBase
             {
                 ClassId = BitConverter.ToInt64(Guid.NewGuid().ToByteArray(), 0),
                 Duracao = dto.Duracao,
-                QrCode = qrCode
+                QrCode = qrCode,
+                NomeDaClasse = dto.NomeDaClasse,
             };
 
             var response = await _supabase.From<Classes>().Insert(newClass);
@@ -73,6 +74,45 @@ public class ClassesController : ControllerBase
             return StatusCode(500, new { error = "Erro ao registrar presença", details = ex.Message });
         }
     }
+    [HttpGet("GetClasses")]
+    public async Task<IActionResult> GetClasses()
+    {
+        var classes = await _supabase.From<Classes>().Get();
+        var response = classes.Models.Select(classe => new
+        {
+            ClassId = classe.ClassId.ToString(), // Converte para string
+            classe.Duracao,
+            classe.QrCode
+        }).ToList();
+
+        return Ok(response);
+    }
+
+    [HttpGet("GetAlunosByClass/{classId}")]
+    public async Task<IActionResult> GetAlunosByClass(string classId)
+    {
+        var history = await _supabase
+            .From<ClassesHistory>()
+            .Filter("ClassId", Supabase.Postgrest.Constants.Operator.Equals, classId)
+            .Get();
+
+        var alunos = new List<object>();
+
+        foreach (var record in history.Models)
+        {
+            var aluno = await _supabase
+                .From<Users>()
+                .Filter("Id", Supabase.Postgrest.Constants.Operator.Equals, record.AlunoId.ToString())
+                .Single();
+
+            if (aluno != null)
+            {
+                alunos.Add(new { aluno.Nome });
+            }
+        }
+
+        return Ok(alunos);
+    }
 
 
     private string GenerateQrCode(string classId)
@@ -87,6 +127,7 @@ public class ClassesController : ControllerBase
 
 public class CreateClassDto
 {
+    public string NomeDaClasse { get; set; }
     public int Duracao { get; set; }
 }
 
@@ -101,7 +142,9 @@ public class Classes : BaseModel
     public long ClassId { get; set; }
 
     [Column("Duracao")]
-    public int Duracao { get; set; } // duração em minutos
+    public int Duracao { get; set; }
+    [Column("NomeDaClasse")]
+    public string NomeDaClasse { get; set; }
 
     [Column("QrCode")]
     public string QrCode { get; set; }

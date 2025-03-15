@@ -58,7 +58,16 @@ public class HomeController : ControllerBase
             GlobalUser.UserId = user.Id;
             GlobalUser.IsAluno = user.IsAluno;
             GlobalUser.Nome = user.Nome;
-            return Ok(new { message = "Login bem-sucedido", user });
+            return Ok(new
+            {
+                message = "Login bem-sucedido",
+                user = new
+                {
+                    user.Email,
+                    user.Nome,
+                    user.IsAluno,
+                }
+            });
         }
         catch (Exception ex)
         {
@@ -70,7 +79,7 @@ public class HomeController : ControllerBase
 public class Users : BaseModel
 {
     [PrimaryKey]
-    [Column("id")]
+    [Column("Id")]
     public long Id { get; set; }
 
     [Column("IsAluno")]
