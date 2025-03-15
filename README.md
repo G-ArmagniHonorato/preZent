@@ -29,5 +29,5 @@ Certifique-se de executar o comando npm install e logo em seguida ng serve
 
 
 ### COLABORADORES
-Guilherme Armagni Honorato
+Guilherme Armagni Honorato e
 Arthur Bernardes
